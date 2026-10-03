@@ -1,0 +1,6 @@
+{
+  "name": "Musafir Cafe",
+  "description": "Good Food. Good Coffee. Good Memories. Explore the artisan menu, order online, read reviews, and connect with Musafir Cafe.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

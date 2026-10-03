@@ -1,0 +1,100 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny all unknown collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Admin detection: checks token email or users document role
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email != null &&
+         (request.auth.token.email == 'prajapatialok926@gmail.com' ||
+          request.auth.token.email.lower() == 'prajapatialok926@gmail.com')) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         'role' in get(/databases/$(database)/documents/users/$(request.auth.uid)).data &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    // 1. Users Collection
+    match /users/{userId} {
+      // User can read their own profile or admin can read any profile
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      
+      // User can create their own profile document
+      allow create: if isOwner(userId);
+
+      // User can update their profile; non-admins cannot change their role to admin
+      allow update: if isAdmin() || (
+        isOwner(userId) &&
+        (request.resource.data.role == resource.data.role || request.resource.data.role == 'customer')
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // 2. Menu Items Collection
+    match /menuItems/{menuItemId} {
+      // Customers & guests can READ menu items
+      allow read: if true;
+
+      // Only admins can CREATE, UPDATE, or DELETE menu items
+      allow create, update, delete: if isAdmin();
+    }
+
+    // 3. Orders Collection
+    match /orders/{orderId} {
+      // Admins can read all orders; Customers can read only their own orders
+      allow get: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow list: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+
+      // Customers can create their own orders; guests can create guest orders; Admins can create orders
+      allow create: if (
+        isSignedIn() && request.resource.data.customerId == request.auth.uid
+      ) || (
+        !isSignedIn() && request.resource.data.customerId == 'guest'
+      ) || isAdmin();
+
+      // Only admins can update order status or delete orders
+      allow update, delete: if isAdmin();
+    }
+
+    // 4. Feedback Collection
+    match /feedback/{feedbackId} {
+      // Only admin can read, update, or delete feedback submissions
+      allow read, update, delete: if isAdmin();
+
+      // Guests and customers can create feedback
+      allow create: if request.resource.data.rating >= 1 &&
+                       request.resource.data.rating <= 5 &&
+                       request.resource.data.message is string &&
+                       request.resource.data.customerName is string;
+    }
+
+    // 5. Contacts Collection
+    match /contacts/{contactId} {
+      // Anyone can create a contact inquiry
+      allow create: if request.resource.data.name is string &&
+                       request.resource.data.email is string &&
+                       request.resource.data.message is string;
+
+      // Only admin can read, update, or delete contact submissions
+      allow read, update, delete: if isAdmin();
+    }
+
+  }
+}

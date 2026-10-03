@@ -1,0 +1,109 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile with authentication and role information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 150 },
+        "phone": { "type": "string", "maxLength": 25 },
+        "role": { "type": "string", "enum": ["customer", "admin"] },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["uid", "name", "email", "role", "createdAt"]
+    },
+    "MenuItem": {
+      "title": "MenuItem",
+      "description": "Restaurant menu item for food and beverages",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 120 },
+        "description": { "type": "string", "maxLength": 500 },
+        "price": { "type": "number" },
+        "category": { "type": "string", "maxLength": 50 },
+        "image": { "type": "string", "maxLength": 500 },
+        "isVeg": { "type": "boolean" },
+        "rating": { "type": "number" },
+        "available": { "type": "boolean" },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["name", "price", "category", "isVeg", "available"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Food order placed by a customer",
+      "type": "object",
+      "properties": {
+        "orderId": { "type": "string", "maxLength": 50 },
+        "customerId": { "type": "string", "maxLength": 128 },
+        "customerName": { "type": "string", "maxLength": 100 },
+        "phone": { "type": "string", "maxLength": 25 },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "GST": { "type": "number" },
+        "deliveryCharge": { "type": "number" },
+        "total": { "type": "number" },
+        "orderType": { "type": "string", "enum": ["delivery", "pickup"] },
+        "deliveryAddress": { "type": "string", "maxLength": 300 },
+        "paymentMethod": { "type": "string", "enum": ["cod", "upi", "card"] },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "confirmed", "preparing", "out_for_delivery", "completed", "cancelled"]
+        },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["orderId", "customerId", "customerName", "phone", "items", "subtotal", "total", "orderType", "paymentMethod", "status", "createdAt"]
+    },
+    "Feedback": {
+      "title": "Feedback",
+      "description": "Customer feedback and dining reviews",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string", "maxLength": 128 },
+        "customerName": { "type": "string", "maxLength": 100 },
+        "rating": { "type": "number" },
+        "message": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["customerName", "rating", "message", "createdAt"]
+    },
+    "Contact": {
+      "title": "Contact",
+      "description": "Inquiry form submission from website visitors",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "maxLength": 100 },
+        "email": { "type": "string", "maxLength": 150 },
+        "phone": { "type": "string", "maxLength": 25 },
+        "subject": { "type": "string", "maxLength": 150 },
+        "message": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["name", "email", "phone", "message", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Customer and staff profiles"
+    },
+    "/menuItems/{menuItemId}": {
+      "schema": { "$ref": "#/entities/MenuItem" },
+      "description": "Cafe menu catalog"
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer orders with fulfillment and payment status"
+    },
+    "/feedback/{feedbackId}": {
+      "schema": { "$ref": "#/entities/Feedback" },
+      "description": "Guest feedback and rating submissions"
+    },
+    "/contacts/{contactId}": {
+      "schema": { "$ref": "#/entities/Contact" },
+      "description": "General and reservation contact inquiries"
+    }
+  }
+}

@@ -1,0 +1,46 @@
+import React, { createContext, useContext, useState, useCallback } from 'react';
+
+export interface Toast {
+  id: string;
+  message: string;
+  type?: 'success' | 'info' | 'error';
+}
+
+interface ToastContextType {
+  toasts: Toast[];
+  showToast: (message: string, type?: 'success' | 'info' | 'error') => void;
+  removeToast: (id: string) => void;
+}
+
+const ToastContext = createContext<ToastContextType | undefined>(undefined);
+
+export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const removeToast = useCallback((id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  const showToast = useCallback((message: string, type: 'success' | 'info' | 'error' = 'success') => {
+    const id = `toast-${Date.now()}-${Math.random()}`;
+    setToasts(prev => [...prev, { id, message, type }]);
+
+    setTimeout(() => {
+      removeToast(id);
+    }, 3200);
+  }, [removeToast]);
+
+  return (
+    <ToastContext.Provider value={{ toasts, showToast, removeToast }}>
+      {children}
+    </ToastContext.Provider>
+  );
+};
+
+export const useToast = (): ToastContextType => {
+  const context = useContext(ToastContext);
+  if (!context) {
+    throw new Error('useToast must be used within a ToastProvider');
+  }
+  return context;
+};
